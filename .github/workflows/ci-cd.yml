@@ -145,7 +145,13 @@ jobs:
 
       - name: smoke test through the ingress
         run: |
-          for i in $(seq 1 20); do curl -sf -H 'Host: shelfwise.local' http://localhost/api/books/stats && break; sleep 3; done
+          kubectl wait -n shelfwise --for=jsonpath='{.status.loadBalancer.ingress}' ingress/shelfwise --timeout=120s
+          ok=0
+          for i in $(seq 1 30); do
+            if curl -sf -H 'Host: shelfwise.local' http://localhost/api/books/stats; then ok=1; break; fi
+            sleep 3
+          done
+          [ "$ok" = 1 ] || { kubectl describe ingress -n shelfwise; kubectl logs -n ingress-nginx -l app.kubernetes.io/component=controller --tail=30; exit 1; }
           echo
           curl -sf -H 'Host: shelfwise.local' http://localhost/ | grep -o '<title>.*</title>'
           curl -sf -X POST -H 'Host: shelfwise.local' -H 'content-type: application/json' \

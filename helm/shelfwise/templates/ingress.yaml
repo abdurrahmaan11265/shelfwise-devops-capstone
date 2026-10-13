@@ -18,7 +18,7 @@ spec:
             pathType: Prefix
             backend: {service: {name: {{ .Release.Name }}-backend, port: {number: 8000}}}
           - path: /openapi.json
-            pathType: Exact
+            pathType: Prefix
             backend: {service: {name: {{ .Release.Name }}-backend, port: {number: 8000}}}
           - path: /
             pathType: Prefix
