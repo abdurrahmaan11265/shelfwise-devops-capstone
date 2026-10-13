@@ -1,0 +1,9 @@
+# Lab 1: a backend rollout pinned to an image tag that was never pushed.
+# Symptom: new pods stuck in ErrImagePull / ImagePullBackOff, old pods keep serving.
+# Apply with:  kubectl -n shelfwise patch deployment shelfwise-backend --patch-file troubleshooting/broken-image.yaml
+spec:
+  template:
+    spec:
+      containers:
+        - name: backend
+          image: ghcr.io/abdurrahmaan11265/shelfwise-backend:does-not-exist

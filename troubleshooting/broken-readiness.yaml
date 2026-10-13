@@ -1,0 +1,13 @@
+# Lab 3: readiness probe pointed at a path the API does not serve.
+# Symptom: new pods are Running but 0/1 READY and never join the Service endpoints;
+# the rollout stalls while the old pods keep taking traffic.
+# Apply with:  kubectl -n shelfwise patch deployment shelfwise-backend --patch-file troubleshooting/broken-readiness.yaml
+spec:
+  template:
+    spec:
+      containers:
+        - name: backend
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http

@@ -1,0 +1,17 @@
+# Lab 2: a second backend Service whose selector has a typo (backnd).
+# Symptom: the Service exists and has a ClusterIP but zero endpoints, so every
+# request through it hangs or is refused.
+apiVersion: v1
+kind: Service
+metadata:
+  name: shelfwise-backend-v2
+  namespace: shelfwise
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/instance: shelfwise
+    app.kubernetes.io/component: backnd
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http

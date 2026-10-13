@@ -1,0 +1,38 @@
+# helm install monitoring prometheus-community/kube-prometheus-stack \
+#   -n monitoring --create-namespace -f monitoring/kube-prometheus-stack-values.yaml
+prometheus:
+  prometheusSpec:
+    retention: 12h
+    scrapeInterval: 15s
+    # pick up ServiceMonitors from every namespace, not only ones labelled for this release
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    resources:
+      requests: {cpu: 200m, memory: 512Mi}
+
+grafana:
+  # the admin password lives in a Secret created at install time, never in git:
+  #   kubectl create secret generic grafana-admin -n monitoring \
+  #     --from-literal=admin-user=admin --from-literal=admin-password="$(openssl rand -hex 12)"
+  admin:
+    existingSecret: grafana-admin
+    userKey: admin-user
+    passwordKey: admin-password
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      searchNamespace: ALL
+
+alertmanager:
+  alertmanagerSpec:
+    resources:
+      requests: {cpu: 20m, memory: 64Mi}
+
+kubeEtcd:
+  enabled: false        # not reachable on minikube or EKS, would only show as down
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false

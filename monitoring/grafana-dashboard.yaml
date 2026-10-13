@@ -1,0 +1,439 @@
+# Grafana's sidecar loads any ConfigMap labelled grafana_dashboard=1
+apiVersion: v1
+data:
+  shelfwise-api.json: |-
+    {
+     "uid": "shelfwise-api",
+     "title": "ShelfWise API",
+     "tags": [
+      "shelfwise"
+     ],
+     "timezone": "browser",
+     "refresh": "10s",
+     "time": {
+      "from": "now-30m",
+      "to": "now"
+     },
+     "schemaVersion": 39,
+     "panels": [
+      {
+       "id": 1,
+       "type": "stat",
+       "title": "Requests / second",
+       "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+       },
+       "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 4
+       },
+       "fieldConfig": {
+        "defaults": {
+         "unit": "reqps",
+         "thresholds": {
+          "mode": "absolute",
+          "steps": [
+           {
+            "color": "green",
+            "value": null
+           }
+          ]
+         }
+        },
+        "overrides": []
+       },
+       "options": {
+        "reduceOptions": {
+         "calcs": [
+          "lastNotNull"
+         ]
+        },
+        "colorMode": "value",
+        "graphMode": "area"
+       },
+       "targets": [
+        {
+         "refId": "A",
+         "expr": "sum(rate(http_requests_total{namespace=\"shelfwise\"}[2m]))",
+         "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+         }
+        }
+       ]
+      },
+      {
+       "id": 2,
+       "type": "stat",
+       "title": "p95 latency",
+       "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+       },
+       "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 4
+       },
+       "fieldConfig": {
+        "defaults": {
+         "unit": "s",
+         "thresholds": {
+          "mode": "absolute",
+          "steps": [
+           {
+            "color": "green",
+            "value": null
+           },
+           {
+            "color": "orange",
+            "value": 0.3
+           },
+           {
+            "color": "red",
+            "value": 1
+           }
+          ]
+         }
+        },
+        "overrides": []
+       },
+       "options": {
+        "reduceOptions": {
+         "calcs": [
+          "lastNotNull"
+         ]
+        },
+        "colorMode": "value",
+        "graphMode": "area"
+       },
+       "targets": [
+        {
+         "refId": "A",
+         "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{namespace=\"shelfwise\"}[5m])) by (le))",
+         "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+         }
+        }
+       ]
+      },
+      {
+       "id": 3,
+       "type": "stat",
+       "title": "Error rate (5xx)",
+       "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+       },
+       "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 4
+       },
+       "fieldConfig": {
+        "defaults": {
+         "unit": "percentunit",
+         "thresholds": {
+          "mode": "absolute",
+          "steps": [
+           {
+            "color": "green",
+            "value": null
+           },
+           {
+            "color": "red",
+            "value": 0.05
+           }
+          ]
+         }
+        },
+        "overrides": []
+       },
+       "options": {
+        "reduceOptions": {
+         "calcs": [
+          "lastNotNull"
+         ]
+        },
+        "colorMode": "value",
+        "graphMode": "area"
+       },
+       "targets": [
+        {
+         "refId": "A",
+         "expr": "(sum(rate(http_requests_total{namespace=\"shelfwise\",status=\"5xx\"}[5m])) or vector(0)) / sum(rate(http_requests_total{namespace=\"shelfwise\"}[5m]))",
+         "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+         }
+        }
+       ]
+      },
+      {
+       "id": 4,
+       "type": "stat",
+       "title": "Backend pods available",
+       "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+       },
+       "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 4
+       },
+       "fieldConfig": {
+        "defaults": {
+         "unit": "none",
+         "thresholds": {
+          "mode": "absolute",
+          "steps": [
+           {
+            "color": "green",
+            "value": null
+           }
+          ]
+         }
+        },
+        "overrides": []
+       },
+       "options": {
+        "reduceOptions": {
+         "calcs": [
+          "lastNotNull"
+         ]
+        },
+        "colorMode": "value",
+        "graphMode": "area"
+       },
+       "targets": [
+        {
+         "refId": "A",
+         "expr": "sum(kube_deployment_status_replicas_available{namespace=\"shelfwise\",deployment=\"shelfwise-backend\"})",
+         "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+         }
+        }
+       ]
+      },
+      {
+       "id": 5,
+       "type": "timeseries",
+       "title": "HTTP requests per second by endpoint",
+       "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+       },
+       "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 12,
+        "h": 8
+       },
+       "fieldConfig": {
+        "defaults": {
+         "unit": "reqps",
+         "custom": {
+          "lineWidth": 2,
+          "fillOpacity": 12
+         }
+        },
+        "overrides": []
+       },
+       "options": {
+        "legend": {
+         "displayMode": "table",
+         "placement": "bottom",
+         "calcs": [
+          "lastNotNull",
+          "max"
+         ]
+        },
+        "tooltip": {
+         "mode": "multi"
+        }
+       },
+       "targets": [
+        {
+         "refId": "A",
+         "expr": "sum(rate(http_requests_total{namespace=\"shelfwise\"}[1m])) by (method, handler)",
+         "legendFormat": "{{method}} {{handler}}",
+         "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+         }
+        }
+       ]
+      },
+      {
+       "id": 6,
+       "type": "timeseries",
+       "title": "Latency by endpoint (p50 / p95)",
+       "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+       },
+       "gridPos": {
+        "x": 12,
+        "y": 4,
+        "w": 12,
+        "h": 8
+       },
+       "fieldConfig": {
+        "defaults": {
+         "unit": "s",
+         "custom": {
+          "lineWidth": 2,
+          "fillOpacity": 12
+         }
+        },
+        "overrides": []
+       },
+       "options": {
+        "legend": {
+         "displayMode": "table",
+         "placement": "bottom",
+         "calcs": [
+          "lastNotNull",
+          "max"
+         ]
+        },
+        "tooltip": {
+         "mode": "multi"
+        }
+       },
+       "targets": [
+        {
+         "refId": "A",
+         "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{namespace=\"shelfwise\"}[5m])) by (le, handler))",
+         "legendFormat": "p95 {{handler}}",
+         "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+         }
+        },
+        {
+         "refId": "B",
+         "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket{namespace=\"shelfwise\"}[5m])) by (le, handler))",
+         "legendFormat": "p50 {{handler}}",
+         "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+         }
+        }
+       ]
+      },
+      {
+       "id": 7,
+       "type": "timeseries",
+       "title": "Responses by status class",
+       "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+       },
+       "gridPos": {
+        "x": 0,
+        "y": 12,
+        "w": 12,
+        "h": 8
+       },
+       "fieldConfig": {
+        "defaults": {
+         "unit": "reqps",
+         "custom": {
+          "lineWidth": 2,
+          "fillOpacity": 12
+         }
+        },
+        "overrides": []
+       },
+       "options": {
+        "legend": {
+         "displayMode": "table",
+         "placement": "bottom",
+         "calcs": [
+          "lastNotNull",
+          "max"
+         ]
+        },
+        "tooltip": {
+         "mode": "multi"
+        }
+       },
+       "targets": [
+        {
+         "refId": "A",
+         "expr": "sum(rate(http_requests_total{namespace=\"shelfwise\"}[1m])) by (status)",
+         "legendFormat": "{{status}}",
+         "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+         }
+        }
+       ]
+      },
+      {
+       "id": 8,
+       "type": "timeseries",
+       "title": "Backend CPU per pod (HPA input)",
+       "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+       },
+       "gridPos": {
+        "x": 12,
+        "y": 12,
+        "w": 12,
+        "h": 8
+       },
+       "fieldConfig": {
+        "defaults": {
+         "unit": "cores",
+         "custom": {
+          "lineWidth": 2,
+          "fillOpacity": 12
+         }
+        },
+        "overrides": []
+       },
+       "options": {
+        "legend": {
+         "displayMode": "table",
+         "placement": "bottom",
+         "calcs": [
+          "lastNotNull",
+          "max"
+         ]
+        },
+        "tooltip": {
+         "mode": "multi"
+        }
+       },
+       "targets": [
+        {
+         "refId": "A",
+         "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"shelfwise\",container=\"backend\"}[2m])) by (pod)",
+         "legendFormat": "{{pod}}",
+         "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+         }
+        }
+       ]
+      }
+     ]
+    }
+kind: ConfigMap
+metadata:
+  labels:
+    grafana_dashboard: "1"
+  name: shelfwise-grafana-dashboard
+  namespace: monitoring
