@@ -1,0 +1,51 @@
+# Image tags are the git commit SHA; the pipeline sets them with --set.
+imageRegistry: ghcr.io/abdurrahmaan11265
+
+backend:
+  image:
+    repository: shelfwise-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 2
+  libraryName: ShelfWise Central Library
+  resources:
+    requests: {cpu: 100m, memory: 128Mi}
+    limits: {cpu: 500m, memory: 256Mi}
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 60
+
+frontend:
+  image:
+    repository: shelfwise-frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 2
+  resources:
+    requests: {cpu: 50m, memory: 32Mi}
+    limits: {cpu: 200m, memory: 96Mi}
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 4
+    targetCPUUtilizationPercentage: 70
+
+postgresql:
+  image: postgres:16-alpine
+  database: shelfwise
+  username: shelfwise
+  # leave empty: a random password is generated once and kept across upgrades
+  password: ""
+  storage: 1Gi
+
+ingress:
+  enabled: true
+  className: nginx
+  host: shelfwise.local
+
+monitoring:
+  serviceMonitor:
+    enabled: true
+    releaseLabel: monitoring   # must match the kube-prometheus-stack release name
