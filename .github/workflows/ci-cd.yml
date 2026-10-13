@@ -1,0 +1,156 @@
+# ShelfWise pipeline
+#   test   -> pytest + frontend build (a failing test stops everything)
+#   build  -> build each image, Trivy gate on HIGH/CRITICAL, push to GHCR tagged with the commit SHA
+#   deploy -> helm upgrade --install into a throwaway kind cluster and smoke test through the ingress
+name: ci-cd
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}/shelfwise
+
+jobs:
+  test:
+    name: test (pytest + frontend build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+      - name: install backend dependencies
+        run: pip install -r backend/requirements-dev.txt
+      - name: run pytest
+        working-directory: backend
+        run: pytest -v --junitxml=pytest-report.xml
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: build frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: keep the test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-report
+          path: backend/pytest-report.xml
+
+  build:
+    name: build, scan and push (${{ matrix.component }})
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: true
+      matrix:
+        component: [backend, frontend]
+    env:
+      IMAGE: ghcr.io/${{ github.repository_owner }}/shelfwise-${{ matrix.component }}:${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: build image
+        run: |
+          docker build \
+            --label org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }} \
+            --label org.opencontainers.image.revision=${{ github.sha }} \
+            -t "$IMAGE" ${{ matrix.component }}
+
+      - name: trivy scan (fails on fixable HIGH or CRITICAL)
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.75.0 \
+            image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 --format table "$IMAGE"
+
+      - name: log in to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: push image tagged with the commit SHA
+        if: github.event_name != 'pull_request'
+        run: docker push "$IMAGE"
+
+  deploy:
+    name: deploy with helm and smoke test
+    needs: build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    env:
+      TAG: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: create a kind cluster with an ingress port
+        uses: helm/kind-action@v1
+        with:
+          cluster_name: shelfwise
+          config: .github/kind-config.yaml
+
+      - name: install the nginx ingress controller
+        run: |
+          kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.11.3/deploy/static/provider/kind/deploy.yaml
+          kubectl wait -n ingress-nginx --for=condition=ready pod -l app.kubernetes.io/component=controller --timeout=180s
+
+      - name: install metrics-server for the HPA
+        run: |
+          kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.7.2/components.yaml
+          kubectl patch deploy metrics-server -n kube-system --type=json \
+            -p '[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}]'
+
+      - name: load the images that were just pushed into kind
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          for c in backend frontend; do
+            docker pull "$IMAGE_PREFIX-$c:$TAG"
+            kind load docker-image "$IMAGE_PREFIX-$c:$TAG" --name shelfwise
+          done
+
+      - name: helm upgrade --install
+        run: |
+          kubectl apply -f k8s/namespace.yaml
+          helm upgrade --install shelfwise ./helm/shelfwise -n shelfwise \
+            --set imageRegistry=ghcr.io/${{ github.repository_owner }} \
+            --set backend.image.tag=$TAG --set frontend.image.tag=$TAG \
+            --set monitoring.serviceMonitor.enabled=false \
+            --wait --timeout 6m
+          helm list -n shelfwise
+          kubectl get pods,svc,ingress,hpa -n shelfwise
+
+      - name: smoke test through the ingress
+        run: |
+          for i in $(seq 1 20); do curl -sf -H 'Host: shelfwise.local' http://localhost/api/books/stats && break; sleep 3; done
+          echo
+          curl -sf -H 'Host: shelfwise.local' http://localhost/ | grep -o '<title>.*</title>'
+          curl -sf -X POST -H 'Host: shelfwise.local' -H 'content-type: application/json' \
+            -d '{"title":"Deployed by CI","author":"GitHub Actions","isbn":"978-0000000001","genre":"Technology"}' \
+            http://localhost/api/books
+          echo
+          curl -sf -H 'Host: shelfwise.local' "http://localhost/api/books?q=Deployed" | grep -q 'Deployed by CI'
+          echo "deployed image tag: $TAG"
