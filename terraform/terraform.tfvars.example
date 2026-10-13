@@ -1,0 +1,11 @@
+# copy to terraform.tfvars and adjust; terraform.tfvars is git-ignored
+region               = "ap-south-1"
+project              = "shelfwise"
+vpc_cidr             = "10.40.0.0/16"
+public_subnet_cidrs  = ["10.40.0.0/20", "10.40.16.0/20"]
+private_subnet_cidrs = ["10.40.128.0/20", "10.40.144.0/20"]
+kubernetes_version   = "1.31"
+node_instance_types  = ["t3.medium"]
+node_desired_size    = 2
+node_min_size        = 1
+node_max_size        = 3
