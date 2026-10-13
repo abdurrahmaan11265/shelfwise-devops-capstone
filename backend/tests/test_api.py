@@ -68,3 +68,8 @@ def test_metrics_endpoint(client, book):
     client.get("/api/books")
     body = client.get("/metrics").text
     assert "http_requests_total" in body
+
+
+def test_info_reports_version(client):
+    body = client.get("/api/info").json()
+    assert set(body) == {"library", "version"}

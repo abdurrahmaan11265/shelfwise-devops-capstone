@@ -53,6 +53,12 @@ def ready(response: Response, db: Session = Depends(get_db)):
         return {"status": "database unavailable"}
 
 
+@app.get("/api/info")
+def info():
+    """Which build is serving: the image tag is the git commit SHA."""
+    return {"library": settings.library_name, "version": settings.app_version}
+
+
 @app.get("/api/genres")
 def genres():
     return GENRES

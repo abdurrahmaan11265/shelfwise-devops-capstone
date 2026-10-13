@@ -73,6 +73,7 @@ export default function App() {
   const [modal, setModal] = useState(null);
   const [status, setStatus] = useState('loading');
   const [toast, setToast] = useState('');
+  const [build, setBuild] = useState('');
 
   const load = useCallback(async () => {
     try {
@@ -83,7 +84,10 @@ export default function App() {
     }
   }, [filters]);
 
-  useEffect(() => { api.genres().then(setGenres).catch(() => {}); }, []);
+  useEffect(() => {
+    api.genres().then(setGenres).catch(() => {});
+    api.info().then((i) => setBuild(i.version)).catch(() => {});
+  }, []);
   useEffect(() => { const t = setTimeout(load, 200); return () => clearTimeout(t); }, [load]);
 
   const flash = (msg) => { setToast(msg); setTimeout(() => setToast(''), 2600); };
@@ -112,6 +116,7 @@ export default function App() {
         <div className="sidebar-foot">
           <span className={`dot ${status === 'ok' ? 'up' : status === 'error' ? 'down' : ''}`} />
           {status === 'ok' ? 'API connected' : status === 'error' ? 'API unreachable' : 'Connecting…'}
+          {build && <span className="build" title={build}>build {build.slice(0, 7)}</span>}
         </div>
       </aside>
 

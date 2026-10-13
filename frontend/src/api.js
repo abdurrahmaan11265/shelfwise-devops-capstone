@@ -21,6 +21,7 @@ export const api = {
   },
   stats: () => request('/books/stats'),
   genres: () => request('/genres'),
+  info: () => request('/info'),
   loans: () => request('/loans?limit=12'),
   createBook: (data) => request('/books', { method: 'POST', body: JSON.stringify(data) }),
   updateBook: (id, data) => request(`/books/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
