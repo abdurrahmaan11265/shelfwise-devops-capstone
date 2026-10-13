@@ -24,6 +24,10 @@ def run_migrations_online():
     engine = engine_from_config(config.get_section(config.config_ini_section), prefix="sqlalchemy.",
                                 poolclass=pool.NullPool)
     with engine.connect() as conn:
+        # several backend replicas start at once in kubernetes; a postgres advisory
+        # lock makes them take turns so only one actually runs each migration
+        if conn.dialect.name == "postgresql":
+            conn.exec_driver_sql("SELECT pg_advisory_lock(727001)")
         context.configure(connection=conn, target_metadata=target_metadata)
         with context.begin_transaction():
             context.run_migrations()
