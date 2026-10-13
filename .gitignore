@@ -1,0 +1,30 @@
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.coverage
+
+# node
+node_modules/
+dist/
+
+# secrets and local config
+.env
+*.env
+!.env.example
+
+# terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log
+.terraform.lock.hcl.bak
+
+# os / editor
+.DS_Store
+.idea/
+.vscode/
