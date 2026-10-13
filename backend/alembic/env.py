@@ -31,6 +31,9 @@ def run_migrations_online():
         context.configure(connection=conn, target_metadata=target_metadata)
         with context.begin_transaction():
             context.run_migrations()
+        # the lock query above opened the transaction alembic ran inside, so alembic
+        # treats it as the caller's to finish; commit it explicitly or it rolls back
+        conn.commit()
 
 
 if context.is_offline_mode():
