@@ -20,6 +20,7 @@ dist/
 *.tfstate
 *.tfstate.*
 *.tfvars
+tfplan
 !*.tfvars.example
 crash.log
 .terraform.lock.hcl.bak
@@ -28,4 +29,3 @@ crash.log
 .DS_Store
 .idea/
 .vscode/
-.moto-run-backup/

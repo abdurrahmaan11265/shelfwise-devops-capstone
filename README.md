@@ -105,7 +105,7 @@ flowchart LR
 │   └── Dockerfile            node build stage → nginx-unprivileged runtime (uid 101)
 ├── docker-compose.yml        postgres + backend + frontend
 ├── .github/workflows/        ci-cd.yml: test → build, scan, push → deploy + smoke test
-├── terraform/                AWS VPC + EKS, tfvars example, emulator/ override (see Section 11)
+├── terraform/                AWS VPC + EKS, tfvars example (see Section 11)
 ├── k8s/                      namespace manifest
 ├── helm/shelfwise/           chart: deployments, services, PostgreSQL, ingress, HPA, ServiceMonitor
 ├── monitoring/               kube-prometheus-stack values, Grafana dashboard
@@ -328,16 +328,12 @@ terraform destroy
 > account `592050574278` in `ap-south-1` on 16 October 2026. `terraform apply` created all
 > 22 resources: the VPC, four subnets, Internet and NAT gateways, route tables, the two IAM roles,
 > the EKS 1.36 control plane and a managed node group of two `t3.medium` workers.
-> `kubectl get nodes` reached the real cluster, and `terraform destroy` removed everything
-> 23 minutes after the apply started. The whole run, from the first `apply` call to the last
-> `destroy` call, took 23 minutes and cost well under US$1; a US$1 AWS Budget was set up as a
-> guardrail before the run.
+> `kubectl get nodes` reached the real cluster, and `terraform destroy` removed everything.
+> The whole run, from the first `apply` call to the last `destroy` call, took 23 minutes and cost
+> well under US$1; a US$1 AWS Budget was set up as a guardrail before the run.
 >
-> Two notes. The Kubernetes version was moved from 1.31 to 1.36 before the run because 1.31 is
-> now in EKS extended support, which bills the control plane at six times the standard rate.
-> And earlier iterations of this module were exercised against [Moto](https://github.com/getmoto/moto),
-> an AWS API emulator, when no account was available; `emulator/emulator_override.tf` is kept so
-> the same configuration can still be dry-run locally by copying it into `terraform/`.
+> The Kubernetes version was moved from 1.31 to 1.36 before the run because 1.31 is now in EKS
+> extended support, which bills the control plane at six times the standard rate.
 >
 > The application itself (Section 10) is deployed on a local minikube cluster to keep the cloud
 > run short; on EKS the same Helm command applies after `aws eks update-kubeconfig`.
