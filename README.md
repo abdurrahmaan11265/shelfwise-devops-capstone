@@ -308,7 +308,7 @@ helm list -n shelfwise
 | `providers.tf` | region from a variable; credentials from the environment, never the repo |
 | `variables.tf` | region (`ap-south-1`), CIDRs, Kubernetes version, node sizes |
 | `vpc.tf` | VPC, IGW, **2 public + 2 private subnets** across 2 AZs, NAT gateway, route tables |
-| `eks.tf` | IAM roles and policies, **EKS cluster**, **managed node group** in the private subnets |
+| `eks.tf` | IAM roles and policies, **EKS cluster** (Kubernetes 1.36), **managed node group** in the private subnets |
 | `outputs.tf` | ids, cluster endpoint, and the `aws eks update-kubeconfig` command |
 | `terraform.tfvars.example` | copy to `terraform.tfvars` (git-ignored) |
 
@@ -324,21 +324,43 @@ aws eks update-kubeconfig --region ap-south-1 --name shelfwise-eks
 terraform destroy
 ```
 
-> **How the recorded runs were done.** I did not have an AWS account available while building
-> this, so the recorded `plan`, `apply` and `destroy` were run against
-> [Moto](https://github.com/getmoto/moto), an AWS API emulator. The free edition of LocalStack
-> does not implement EKS; Moto does. `emulator/emulator_override.tf` is copied into `terraform/`
-> for those runs; Terraform merges it over `providers.tf` and sends the API calls to
-> `localhost:5055`. The `.tf` files themselves are unchanged: delete the override and the same
-> configuration targets real AWS.
+> **How the recorded run was done.** The screenshots below come from a real run against AWS
+> account `592050574278` in `ap-south-1` on 16 October 2026. `terraform apply` created all
+> 22 resources: the VPC, four subnets, Internet and NAT gateways, route tables, the two IAM roles,
+> the EKS 1.36 control plane and a managed node group of two `t3.medium` workers.
+> `kubectl get nodes` reached the real cluster, and `terraform destroy` removed everything
+> 23 minutes after the apply started. The whole run, from the first `apply` call to the last
+> `destroy` call, took 23 minutes and cost well under US$1; a US$1 AWS Budget was set up as a
+> guardrail before the run.
 >
-> What this shows: the configuration is valid, the plan is correct (22 resources), every resource
-> including the EKS cluster and node group is created through the real AWS API calls in
-> dependency order, and `destroy` removes all of it. What it does not show: a real EKS control
-> plane and EC2 worker nodes. The recorded resources carry the emulator's placeholder account ID
-> `123456789012`, and there are no AWS Console screenshots. The Kubernetes deployment therefore
-> runs on a local minikube cluster; on EKS the same Helm command applies after
-> `aws eks update-kubeconfig`.
+> Two notes. The Kubernetes version was moved from 1.31 to 1.36 before the run because 1.31 is
+> now in EKS extended support, which bills the control plane at six times the standard rate.
+> And earlier iterations of this module were exercised against [Moto](https://github.com/getmoto/moto),
+> an AWS API emulator, when no account was available; `emulator/emulator_override.tf` is kept so
+> the same configuration can still be dry-run locally by copying it into `terraform/`.
+>
+> The application itself (Section 10) is deployed on a local minikube cluster to keep the cloud
+> run short; on EKS the same Helm command applies after `aws eks update-kubeconfig`.
+
+### Module 7 evidence
+
+| Step | Screenshot |
+|---|---|
+| `terraform init`, `fmt -check`, `validate` | [m7-01](docs/screenshots/m7-01-terraform-init-validate.png) |
+| `terraform plan -out=tfplan`, 22 to add | [m7-02](docs/screenshots/m7-02-terraform-plan.png) |
+| `terraform apply tfplan`, 22 added | [m7-03](docs/screenshots/m7-03-terraform-apply.png) |
+| VPC resource map: subnets, route tables, IGW, NAT | [m7-04](docs/screenshots/m7-04-aws-vpc-resource-map.png) |
+| Subnets with CIDRs across two AZs | [m7-05](docs/screenshots/m7-05-aws-subnets.png) |
+| NAT gateway, available | [m7-06](docs/screenshots/m7-06-aws-nat-gateway.png) |
+| Elastic IP attached to the NAT gateway | [m7-07](docs/screenshots/m7-07-aws-elastic-ip.png) |
+| IAM node role with the three worker policies | [m7-08](docs/screenshots/m7-08-aws-iam-node-role.png) |
+| EKS cluster, active, Kubernetes 1.36 | [m7-09](docs/screenshots/m7-09-aws-eks-cluster.png) |
+| EKS compute: managed node group, 2 nodes, active | [m7-10](docs/screenshots/m7-10-aws-eks-nodegroup.png) |
+| EC2 instances backing the node group | [m7-11](docs/screenshots/m7-11-aws-ec2-instances.png) |
+| `aws eks update-kubeconfig`, `kubectl get nodes`, system pods | [m7-12](docs/screenshots/m7-12-kubectl-get-nodes.png) |
+| `terraform destroy`, 22 destroyed, then CLI checks showing nothing left | [m7-13](docs/screenshots/m7-13-terraform-destroy.png) |
+| EKS console after destroy, no clusters | [m7-14](docs/screenshots/m7-14-aws-eks-after-destroy.png) |
+| AWS Budget of US$1 set as the guardrail for the run | [m7-15](docs/screenshots/m7-15-aws-budget.png) |
 
 ## 12. Monitoring: Prometheus + Grafana
 
@@ -422,7 +444,7 @@ The last feature was added the way the demo runs: showing the running build in t
 | M4 Docker | non-root backend image, multi-stage frontend (node build, nginx runtime), compose | [compose up](docs/screenshots/m4-docker-compose-up.png) |
 | M5 CI/CD | pytest, frontend build, both images, GHCR push tagged with the SHA, Helm deploy | [green run](docs/screenshots/m5-pipeline-success.png), [GHCR tags](docs/screenshots/m5-ghcr-packages.png), [packages](docs/screenshots/m5-ghcr-package-list.png) |
 | M6 DevSecOps | Trivy on both images, `--exit-code 1` on fixable HIGH/CRITICAL | [Trivy output](docs/screenshots/m6-trivy-scan.png) |
-| M7 Terraform | VPC, 2 public + 2 private subnets, NAT, EKS + node group, `tfvars.example` | [plan](docs/screenshots/m7-01-terraform-init-plan.png), [apply](docs/screenshots/m7-02-terraform-apply.png), [EKS](docs/screenshots/m7-03-eks-cluster-and-nodegroup.png), [VPC](docs/screenshots/m7-04-vpc-and-subnets.png), [destroy](docs/screenshots/m7-05-terraform-destroy.png) |
+| M7 Terraform | VPC, 2 public + 2 private subnets, NAT, EKS 1.36 + node group, real AWS run, `tfvars.example` | [plan](docs/screenshots/m7-02-terraform-plan.png), [apply](docs/screenshots/m7-03-terraform-apply.png), [VPC](docs/screenshots/m7-04-aws-vpc-resource-map.png), [EKS](docs/screenshots/m7-09-aws-eks-cluster.png), [nodes](docs/screenshots/m7-12-kubectl-get-nodes.png), [destroy](docs/screenshots/m7-13-terraform-destroy.png), [all 15](#module-7-evidence) |
 | M8 Kubernetes + Helm | namespace, chart, 2+ replicas each, ClusterIP services, Ingress `/` and `/api`, HPA | [helm](docs/screenshots/m8-helm-upgrade-install.png), [pods/svc](docs/screenshots/m8-pods-svc-ingress.png), [via Ingress](docs/screenshots/m8-app-via-ingress.png), [HPA](docs/screenshots/m8-hpa-scaling.png), [labs](docs/screenshots/troubleshoot-1-broken-image.png) |
 | M9 Observability | `/metrics`, Prometheus scraping via ServiceMonitor, Grafana dashboard | [metrics](docs/screenshots/m9-metrics-endpoint.png), [targets UP](docs/screenshots/m9-prometheus-targets.png), [Grafana](docs/screenshots/m9-grafana-dashboard.png) |
 | M10 Docs + demo | this README; commit, pipeline, deployment update | [before](docs/screenshots/m10-before-deploy.png), [deploy](docs/screenshots/m10-deploy-cli.png), [after](docs/screenshots/m10-deployment-updated.png) |
