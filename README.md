@@ -1,7 +1,7 @@
 # ShelfWise: library management, from laptop to monitored Kubernetes
 
 [![ci-cd](https://github.com/abdurrahmaan11265/shelfwise-devops-capstone/actions/workflows/ci-cd.yml/badge.svg?branch=main)](https://github.com/abdurrahmaan11265/shelfwise-devops-capstone/actions/workflows/ci-cd.yml)
-· **Evidence for every grading module: [Grading evidence](#17-grading-evidence)**
+· **Evidence for every grading module: [Grading evidence](#17-grading-evidence)** · **Presentation: [slides (PDF)](docs/shelfwise-capstone-presentation.pdf)**
 
 **ShelfWise** is a library management system: a catalogue of books, the copies on each shelf,
 and who has borrowed what. Librarians search and filter the catalogue, add and edit books,
@@ -443,4 +443,4 @@ The last feature was added the way the demo runs: showing the running build in t
 | M7 Terraform | VPC, 2 public + 2 private subnets, NAT, EKS 1.36 + node group, real AWS run, `tfvars.example` | [plan](docs/screenshots/m7-02-terraform-plan.png), [apply](docs/screenshots/m7-03-terraform-apply.png), [VPC](docs/screenshots/m7-04-aws-vpc-resource-map.png), [EKS](docs/screenshots/m7-09-aws-eks-cluster.png), [nodes](docs/screenshots/m7-12-kubectl-get-nodes.png), [destroy](docs/screenshots/m7-13-terraform-destroy.png), [all 15](#module-7-evidence) |
 | M8 Kubernetes + Helm | namespace, chart, 2+ replicas each, ClusterIP services, Ingress `/` and `/api`, HPA | [helm](docs/screenshots/m8-helm-upgrade-install.png), [pods/svc](docs/screenshots/m8-pods-svc-ingress.png), [via Ingress](docs/screenshots/m8-app-via-ingress.png), [HPA](docs/screenshots/m8-hpa-scaling.png), [labs](docs/screenshots/troubleshoot-1-broken-image.png) |
 | M9 Observability | `/metrics`, Prometheus scraping via ServiceMonitor, Grafana dashboard | [metrics](docs/screenshots/m9-metrics-endpoint.png), [targets UP](docs/screenshots/m9-prometheus-targets.png), [Grafana](docs/screenshots/m9-grafana-dashboard.png) |
-| M10 Docs + demo | this README; commit, pipeline, deployment update | [before](docs/screenshots/m10-before-deploy.png), [deploy](docs/screenshots/m10-deploy-cli.png), [after](docs/screenshots/m10-deployment-updated.png) |
+| M10 Docs + demo | this README, the [presentation slides](docs/shelfwise-capstone-presentation.pdf); commit, pipeline, deployment update | [before](docs/screenshots/m10-before-deploy.png), [deploy](docs/screenshots/m10-deploy-cli.png), [after](docs/screenshots/m10-deployment-updated.png) |
