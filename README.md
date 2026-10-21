@@ -20,9 +20,8 @@ Developer → Git/GitHub → GitHub Actions (pytest · build · Trivy · GHCR ·
 
 <a href="docs/shelfwise-capstone-walkthrough.mp4"><img src="docs/walkthrough-poster.png" alt="Watch the narrated walkthrough video (7 minutes)" width="100%"></a>
 
-<p align="center"><b><a href="docs/shelfwise-capstone-walkthrough.mp4">▶ Narrated walkthrough video · 7 min</a></b> &nbsp;·&nbsp; <b><a href="docs/shelfwise-capstone-presentation.pdf">Presentation slides (PDF, 18 slides)</a></b></p>
-
-<a href="docs/shelfwise-capstone-presentation.pdf"><img src="docs/slides-preview.png" alt="Preview of the 18 presentation slides, click to open the PDF" width="100%"></a>
+<h2 align="center">▶&nbsp; <a href="docs/shelfwise-capstone-walkthrough.mp4">Narrated walkthrough video (7 min)</a></h2>
+<h2 align="center">📑&nbsp; <a href="docs/shelfwise-capstone-presentation.pdf">Presentation slides (PDF, 18 slides)</a></h2>
 
 ---
 
