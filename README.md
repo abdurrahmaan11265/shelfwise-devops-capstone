@@ -1,7 +1,7 @@
 # ShelfWise: library management, from laptop to monitored Kubernetes
 
 [![ci-cd](https://github.com/abdurrahmaan11265/shelfwise-devops-capstone/actions/workflows/ci-cd.yml/badge.svg?branch=main)](https://github.com/abdurrahmaan11265/shelfwise-devops-capstone/actions/workflows/ci-cd.yml)
-· **Evidence for every grading module: [Grading evidence](#17-grading-evidence)** · **Presentation: [slides (PDF)](docs/shelfwise-capstone-presentation.pdf) · [narrated walkthrough (MP4, 11 min)](docs/shelfwise-capstone-walkthrough.mp4)**
+· **Evidence for every grading module: [Grading evidence](#17-grading-evidence)** · **Presentation: [slides (PDF)](docs/shelfwise-capstone-presentation.pdf) · [narrated walkthrough (MP4, 7 min)](docs/shelfwise-capstone-walkthrough.mp4)**
 
 **ShelfWise** is a library management system: a catalogue of books, the copies on each shelf,
 and who has borrowed what. Librarians search and filter the catalogue, add and edit books,
@@ -18,7 +18,11 @@ Developer → Git/GitHub → GitHub Actions (pytest · build · Trivy · GHCR ·
 
 **Author:** Mohammed Abdurrahman (24BCS10130)
 
-![ShelfWise dashboard](docs/screenshots/m1-app-dashboard.png)
+<a href="docs/shelfwise-capstone-walkthrough.mp4"><img src="docs/walkthrough-poster.png" alt="Watch the narrated walkthrough video (7 minutes)" width="100%"></a>
+
+<p align="center"><b><a href="docs/shelfwise-capstone-walkthrough.mp4">▶ Narrated walkthrough video · 7 min</a></b> &nbsp;·&nbsp; <b><a href="docs/shelfwise-capstone-presentation.pdf">Presentation slides (PDF, 18 slides)</a></b></p>
+
+<a href="docs/shelfwise-capstone-presentation.pdf"><img src="docs/slides-preview.png" alt="Preview of the 18 presentation slides, click to open the PDF" width="100%"></a>
 
 ---
 
